@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Голосовалка — Площадка / Погулять</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f172a;
+    --bg2: #1e293b;
+    --card: #1e293b;
+    --accent: #6366f1;
+    --accent2: #8b5cf6;
+    --green: #10b981;
+    --red: #ef4444;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --border: #334155;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+  header {
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .logo {
+    font-weight: 800;
+    font-size: 20px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-right: 16px;
+  }
+  .nav-btn {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+  .nav-btn:hover { background: var(--bg2); border-color: var(--accent); }
+  .nav-btn.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-color: transparent;
+  }
+  main { max-width: 1100px; margin: 24px auto; padding: 0 24px; }
+  .page { display: none; animation: fade 0.3s ease; }
+  .page.active { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  h1 {
+    font-size: 32px;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff, #a5b4fc);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .subtitle { color: var(--muted); margin-bottom: 24px; }
+
+  .poll {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+  .poll-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .poll-title { font-size: 22px; font-weight: 700; }
+  .poll-type {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 6px;
+  }
+  .type-ploshadka { background: rgba(99,102,241,0.2); color: #a5b4fc; }
+  .type-progulka { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+  .timer {
+    background: rgba(239,68,68,0.15);
+    color: #fca5a5;
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .timer.ended { background: rgba(100,116,139,0.2); color: var(--muted); }
+
+  .stats {
+    display: flex;
+    gap: 12px;
+    margin: 16px 0;
+    flex-wrap: wrap;
+  }
+  .stat {
+    flex: 1;
+    min-width: 120px;
+    background: var(--bg);
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-value { font-size: 24px; font-weight: 700; margin-top: 4px; }
+  .stat-yes { color: var(--green); }
+  .stat-no { color: var(--red); }
+
+  .vote-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .vote-form .full { grid-column: 1 / -1; }
+  input, textarea, select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border 0.2s;
+  }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 60px; }
+
+  .vote-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;
+    color: white;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+  .btn:active { transform: translateY(0); }
+  .btn-yes { background: linear-gradient(135deg, var(--green), #059669); }
+  .btn-no { background: linear-gradient(135deg, var(--red), #dc2626); }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); }
+  .btn-secondary { background: var(--bg2); border: 1px solid var(--border); }
+  .btn-danger { background: linear-gradient(135deg, #dc2626, #991b1b); }
+
+  .voted {
+    background: rgba(16,185,129,0.1);
+    border: 1px solid var(--green);
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .voted-text { color: var(--green); font-weight: 600; }
+
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal.active { display: flex; }
+  .modal-content {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-title { font-size: 24px; margin-bottom: 20px; }
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; margin-bottom: 6px; font-size: 13px; color: var(--muted); font-weight: 600; }
+
+  .answer-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .answer-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .answer-name { font-weight: 700; font-size: 16px; }
+  .answer-vote {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .vote-yes { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+  .vote-no { background: rgba(239,68,68,0.2); color: #fca5a5; }
+  .answer-text { color: var(--muted); font-size: 14px; margin-top: 6px; }
+
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; }
+
+  .create-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(99,102,241,0.4);
+    transition: transform 0.2s;
+    z-index: 50;
+  }
+  .create-btn:hover { transform: scale(1.1); }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--muted);
+  }
+
+  @media (max-width: 600px) {
+    .vote-form { grid-template-columns: 1fr; }
+    .vote-form .full { grid-column: 1; }
+    h1 { font-size: 24px; }
+    .poll { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <div class="logo">🗳️ Голосовалка</div>
+    <button class="nav-btn active" data-page="ploshadka">Площадка</button>
+    <button class="nav-btn" data-page="progulka">Погулять</button>
+    <button class="nav-btn" data-page="answers">Ответы</button>
+  </nav>
+</header>
+
+<main>
+  <!-- Страница: Площадка -->
+  <div id="page-ploshadka" class="page active">
+    <h1>🏃 Спортплощадка</h1>
+    <p class="subtitle">Голосуй, идёшь ли ты сегодня на площадку</p>
+    <div id="polls-ploshadka"></div>
+  </div>
+
+  <!-- Страница: Погулять -->
+  <div id="page-progulka" class="page">
+    <h1>🚶 Погулять</h1>
+    <p class="subtitle">Голосуй, идёшь ли ты сегодня гулять</p>
+    <div id="polls-progulka"></div>
+  </div>
+
+  <!-- Страница: Ответы -->
+  <div id="page-answers" class="page">
+    <h1>📊 Все ответы</h1>
+    <p class="subtitle">Кто и за что проголосовал</p>
+    <div id="answers-list"></div>
+  </div>
+</main>
+
+<button class="create-btn" onclick="openCreateModal()" title="Создать голосование">+</button>
+
+<!-- Модалка: Ввод пароля -->
+<div id="modal-password" class="modal">
+  <div class="modal-content">
+    <h2 class="modal-title">🔐 Введите пароль</h2>
+    <div class="form-group">
+      <label class="form-label">Пароль для создания опроса</label>
+      <input type="password" id="password-input" placeholder="Введите пароль">
+    </div>
+    <div class="vote-buttons">
+      <button class="btn btn-primary" onclick="checkPassword()">Войти</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-password')">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модалка: Создание опроса -->
+<div id="modal-create" class="modal">
+  <div class="modal-content">
+    <h2 class="modal-title">✨ Создать голосование</h2>
+    <div class="form-group">
+      <label class="form-label">Тип голосования</label>
+      <select id="create-type">
+        <option value="ploshadka">Площадка</option>
+        <option value="progulka">Погулять</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Название (необязательно)</label>
+      <input type="text" id="create-title" placeholder="Например: Идём на площадку?">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Длительность опроса</label>
+      <select id="create-duration">
+        <option value="1">1 час</option>
+        <option value="2">2 часа</option>
+        <option value="4">4 часа</option>
+        <option value="8">8 часов</option>
+        <option value="24">24 часа</option>
+        <option value="48">2 дня</option>
+        <option value="168">7 дней</option>
+      </select>
+    </div>
+    <div class="vote-buttons">
+      <button class="btn btn-primary" onclick="createPoll()">Создать</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-create')">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+<script>
+// ⚠️ ВСТАВЬ СЮДА СВОЙ FIREBASE КОНФИГ (получишь при настройке)
+const firebaseConfig = {
+  // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAwK8Pa4nG1f6LYrV4NzvAH6CfGfFiU2Wg",
+  authDomain: "oprosnik-ec5dd.firebaseapp.com",
+  databaseURL: "https://oprosnik-ec5dd-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "oprosnik-ec5dd",
+  storageBucket: "oprosnik-ec5dd.firebasestorage.app",
+  messagingSenderId: "882488580676",
+  appId: "1:882488580676:web:bb68cce8a3dbf6ef817a11"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const ADMIN_PASSWORD = 'admin2026';
+let isAdmin = false;
+let currentUserId = localStorage.getItem('userId') || generateUserId();
+localStorage.setItem('userId', currentUserId);
+
+function generateUserId() {
+  return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+// Навигация
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('page-' + btn.dataset.page).classList.add('active');
+  });
+});
+
+// Загрузка опросов
+function loadPolls() {
+  db.ref('polls').on('value', snapshot => {
+    const polls = snapshot.val() || {};
+    renderPolls(polls, 'ploshadka');
+    renderPolls(polls, 'progulka');
+    renderAnswers(polls);
+  });
+}
+
+function renderPolls(polls, type) {
+  const container = document.getElementById('polls-' + type);
+  const activePolls = Object.entries(polls).filter(([id, poll]) => {
+    return poll.type === type && poll.endTime > Date.now();
+  });
+
+  if (activePolls.length === 0) {
+    container.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">📭</div>
+        <p>Нет активных опросов</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = activePolls.map(([id, poll]) => {
+    const votes = poll.votes || {};
+    const yesCount = Object.values(votes).filter(v => v.vote === 'yes').length;
+    const noCount = Object.values(votes).filter(v => v.vote === 'no').length;
+    const userVote = votes[currentUserId];
+    const timeLeft = poll.endTime - Date.now();
+
+    return `
+      <div class="poll">
+        <div class="poll-head">
+          <div>
+            <div class="poll-title">${poll.title || (type === 'ploshadka' ? 'Идёшь на площадку?' : 'Идёшь гулять?')}</div>
+            <span class="poll-type type-${type}">${type === 'ploshadka' ? '🏃 Площадка' : '🚶 Прогулка'}</span>
+          </div>
+          <div class="timer" data-end="${poll.endTime}">⏱️ ${formatTime(timeLeft)}</div>
+        </div>
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-label">Идут</div>
+            <div class="stat-value stat-yes">${yesCount}</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Не идут</div>
+            <div class="stat-value stat-no">${noCount}</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Всего</div>
+            <div class="stat-value">${yesCount + noCount}</div>
+          </div>
+        </div>
+        ${userVote ? `
+          <div class="voted">
+            <div class="voted-text">✓ Вы проголосовали: ${userVote.vote === 'yes' ? 'Иду' : 'Не иду'}</div>
+            <button class="btn btn-danger" onclick="deleteVote('${id}')">Удалить голос</button>
+          </div>
+        ` : `
+          <div class="vote-form">
+            <input type="text" id="name-${id}" placeholder="Имя *" required>
+            <input type="text" id="surname-${id}" placeholder="Фамилия">
+            <textarea id="text-${id}" class="full" placeholder="Дополнительный текст (необязательно)"></textarea>
+            <div class="vote-buttons full">
+              <button class="btn btn-yes" onclick="vote('${id}', 'yes')">✓ Иду</button>
+              <button class="btn btn-no" onclick="vote('${id}', 'no')">✗ Не иду</button>
+            </div>
+          </div>
+        `}
+      </div>
+    `;
+  }).join('');
+}
+
+function renderAnswers(polls) {
+  const container = document.getElementById('answers-list');
+  const allVotes = [];
+
+  Object.entries(polls).forEach(([pollId, poll]) => {
+    if (poll.votes) {
+      Object.entries(poll.votes).forEach(([userId, vote]) => {
+        allVotes.push({
+          pollId,
+          pollTitle: poll.title || (poll.type === 'ploshadka' ? 'Площадка' : 'Прогулка'),
+          pollType: poll.type,
+          ...vote
+        });
+      });
+    }
+  });
+
+  if (allVotes.length === 0) {
+    container.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">📭</div>
+        <p>Пока нет ответов</p>
+      </div>
+    `;
+    return;
+  }
+
+  allVotes.sort((a, b) => b.timestamp - a.timestamp);
+
+  container.innerHTML = allVotes.map(vote => `
+    <div class="answer-card">
+      <div class="answer-head">
+        <div class="answer-name">${vote.name} ${vote.surname || ''}</div>
+        <div class="answer-vote ${vote.vote === 'yes' ? 'vote-yes' : 'vote-no'}">
+          ${vote.vote === 'yes' ? '✓ Иду' : '✗ Не иду'}
+        </div>
+      </div>
+      <div style="font-size: 12px; color: var(--muted); margin-bottom: 4px;">
+        ${vote.pollTitle} • ${new Date(vote.timestamp).toLocaleString('ru-RU')}
+      </div>
+      ${vote.text ? `<div class="answer-text">${vote.text}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function vote(pollId, voteType) {
+  const name = document.getElementById('name-' + pollId).value.trim();
+  const surname = document.getElementById('surname-' + pollId).value.trim();
+  const text = document.getElementById('text-' + pollId).value.trim();
+
+  if (!name) {
+    alert('Введите имя!');
+    return;
+  }
+
+  db.ref(`polls/${pollId}/votes/${currentUserId}`).set({
+    name,
+    surname,
+    text,
+    vote: voteType,
+    timestamp: Date.now()
+  });
+}
+
+function deleteVote(pollId) {
+  if (confirm('Удалить ваш голос?')) {
+    db.ref(`polls/${pollId}/votes/${currentUserId}`).remove();
+  }
+}
+
+function openCreateModal() {
+  if (isAdmin) {
+    document.getElementById('modal-create').classList.add('active');
+  } else {
+    document.getElementById('modal-password').classList.add('active');
+  }
+}
+
+function checkPassword() {
+  const password = document.getElementById('password-input').value;
+  if (password === ADMIN_PASSWORD) {
+    isAdmin = true;
+    closeModal('modal-password');
+    document.getElementById('modal-create').classList.add('active');
+  } else {
+    alert('Неверный пароль!');
+  }
+}
+
+function createPoll() {
+  const type = document.getElementById('create-type').value;
+  const title = document.getElementById('create-title').value.trim();
+  const durationHours = parseInt(document.getElementById('create-duration').value);
+  const endTime = Date.now() + durationHours * 60 * 60 * 1000;
+
+  db.ref('polls').push({
+    type,
+    title,
+    endTime,
+    createdAt: Date.now()
+  });
+
+  closeModal('modal-create');
+  document.getElementById('create-title').value = '';
+}
+
+function closeModal(modalId) {
+  document.getElementById(modalId).classList.remove('active');
+}
+
+function formatTime(ms) {
+  if (ms <= 0) return 'Завершён';
+  const hours = Math.floor(ms / (1000 * 60 * 60));
+  const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+  if (hours > 24) {
+    const days = Math.floor(hours / 24);
+    return `${days}д ${hours % 24}ч`;
+  }
+  return `${hours}ч ${minutes}м`;
+}
+
+// Обновление таймеров
+setInterval(() => {
+  document.querySelectorAll('.timer').forEach(timer => {
+    const endTime = parseInt(timer.dataset.end);
+    const timeLeft = endTime - Date.now();
+    timer.textContent = '⏱️ ' + formatTime(timeLeft);
+    if (timeLeft <= 0) timer.classList.add('ended');
+  });
+}, 60000);
+
+// Закрытие модалок по клику вне
+document.querySelectorAll('.modal').forEach(modal => {
+  modal.addEventListener('click', e => {
+    if (e.target === modal) modal.classList.remove('active');
+  });
+});
+
+// Старт
+loadPolls();
+</script>
+
+</body>
+</html>
