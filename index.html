@@ -378,14 +378,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
 <script>
-// ⚠️ ВСТАВЬ СЮДА СВОЙ FIREBASE КОНФИГ (получишь при настройке)
-const firebaseConfig = {
-  // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
+// ✅ ПРАВИЛЬНЫЙ FIREBASE КОНФИГ (compat SDK)
 const firebaseConfig = {
   apiKey: "AIzaSyAwK8Pa4nG1f6LYrV4NzvAH6CfGfFiU2Wg",
   authDomain: "oprosnik-ec5dd.firebaseapp.com",
@@ -394,10 +387,6 @@ const firebaseConfig = {
   storageBucket: "oprosnik-ec5dd.firebasestorage.app",
   messagingSenderId: "882488580676",
   appId: "1:882488580676:web:bb68cce8a3dbf6ef817a11"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
 };
 
 firebase.initializeApp(firebaseConfig);
